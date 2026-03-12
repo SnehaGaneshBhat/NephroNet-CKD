@@ -25,3 +25,7 @@ Thumbs.db
 
 # pdf files
 *.pdf
+
+# Ignore large RxNorm datasets
+data/RxNorm_full_prescribe_03022026/
+*.RRF
