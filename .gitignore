@@ -29,3 +29,6 @@ Thumbs.db
 # Ignore large RxNorm datasets
 data/RxNorm_full_prescribe_03022026/
 *.RRF
+
+# Ignore RxNorm scripts
+data/RxNorm_full_prescribe_03022026/scripts/
