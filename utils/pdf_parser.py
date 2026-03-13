@@ -24,10 +24,44 @@ def parse_pdf(pdf_path):
                 data["bgr"] = int(match.group(1))
             if match := re.search(r"Hemoglobin[:\s]+([\d\.]+)", text):
                 data["hemo"] = float(match.group(1))
+            if match := re.search(r"Creatinine[:\s]+([\d\.]+)", text):
+                data["sc"] = float(match.group(1))
+            if match := re.search(r"Glucose[:\s]+(\d+)", text):
+                data["bgr"] = int(match.group(1))
 
-            # Prescription extraction (expand regex as needed)
-            meds = re.findall(r"(Ibuprofen|Furosemide|Metformin|Amlodipine)", text)
-            prescriptions.extend(meds)
+            # Enhanced prescription extraction
+            # Look for specific drug patterns
+            drug_patterns = [
+                r"Ibuprofen",
+                r"NSAID\s*\([^)]*\bIbuprofen[^)]*\)",  # NSAID (Ibuprofen)
+                r"Furosemide",
+                r"Metformin", 
+                r"Amlodipine",
+                r"ACE\s*Inhibitor",  # ACE Inhibitor
+                r"Lisinopril",
+                r"Losartan",
+                r"Atorvastatin",
+                r"Simvastatin"
+            ]
+            
+            for pattern in drug_patterns:
+                matches = re.findall(pattern, text, re.IGNORECASE)
+                for match in matches:
+                    # Clean up the drug name
+                    drug_name = match.strip()
+                    if "NSAID" in drug_name and "Ibuprofen" in drug_name:
+                        drug_name = "Ibuprofen"
+                    elif "ACE" in drug_name:
+                        drug_name = "Lisinopril"  # Common ACE inhibitor
+                    prescriptions.append(drug_name)
 
     df = pd.DataFrame([data])
-    return df, prescriptions
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_prescriptions = []
+    for drug in prescriptions:
+        if drug.lower() not in seen:
+            seen.add(drug.lower())
+            unique_prescriptions.append(drug)
+    
+    return df, unique_prescriptions

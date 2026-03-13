@@ -45,24 +45,35 @@ async def analyze_report(
     Upload a medical report PDF.
     Runs Agent A (CKD risk), Agent B (drug risk), and Agent C (education handout).
     """
+
     # Save uploaded PDF
     pdf_path = os.path.join(os.getcwd(), file.filename)
     with open(pdf_path, "wb") as f:
         f.write(await file.read())
 
     # --- Agent A: Parse labs and score CKD risk ---
-    df, prescriptions = parse_pdf(pdf_path)   # parser returns labs + prescriptions
+    df, prescriptions = parse_pdf(pdf_path)
     temp_csv = os.path.join(os.getcwd(), "temp_labs.csv")
     df.to_csv(temp_csv, index=False)
-    risk, feedback = agent_a(temp_csv)
+    results_a = agent_a(temp_csv)
+
+    risk = [r["structured"]["score"] for r in results_a]
+    feedback = [r["narrative"] for r in results_a]
 
     # --- Agent B: Drug risk checker ---
+    print(f"Prescriptions found: {prescriptions}")
     drug_results = process_prescription_list(prescriptions)
+    print(f"Drug results: {drug_results}")
 
     # --- Agent C: Patient education handout ---
-    # Use highest risk level from Agent A for personalization
     risk_level = max(risk) if risk else 0
-    profile = PatientProfile(age=age, culture=culture, literacy=literacy, risk_level=risk_level)
+    
+    # Extract lab values for personalized diet planning
+    lab_values = {}
+    if not df.empty:
+        lab_values = df.iloc[0].to_dict()
+    
+    profile = PatientProfile(age=age, culture=culture, literacy=literacy, risk_level=risk_level, lab_values=lab_values)
     handout = generate_handout(profile)
 
     return {

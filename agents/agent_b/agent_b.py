@@ -7,7 +7,7 @@ import io
 from fastapi.responses import StreamingResponse
 
 # --- Step 1: Load RxNorm concepts ---
-file_path = r"D:\NEPHRONET\data\RxNorm_full_prescribe_03022026\rrf\RXNCONSO.RRF"
+file_path = r"D:\NEPHRONET-CKD\data\RxNorm_full_prescribe_03022026\rrf\RXNCONSO.RRF"
 rxnorm_df = pd.read_csv(file_path, sep="|", header=None, dtype=str)
 
 # Column 0 = RXCUI, Column 14 = Drug Name
@@ -31,7 +31,7 @@ synonyms = {
 }
 
 # --- Step 3: Load nephrotoxic drug list (with Notes column) ---
-risk_df = pd.read_csv(r"D:\NEPHRONET\data\nephrotoxic_drugs.csv")
+risk_df = pd.read_csv(r"D:\NEPHRONET-CKD\data\nephrotoxic_drugs.csv")
 risk_dict = dict(zip(risk_df["DrugName"], risk_df["RiskLevel"]))
 
 # --- Step 4: Risk checker ---
