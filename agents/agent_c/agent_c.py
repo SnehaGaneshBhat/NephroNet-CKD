@@ -100,7 +100,7 @@ def generate_personalized_diet_plan(profile):
     
     # Culture-specific recommendations
     culture_recommendations = {
-        "Indian": [
+        "indian": [
             "• Limit dal and legumes (high in phosphorus and potassium) - choose smaller portions",
             "• Choose white rice over brown rice (lower phosphorus content)",
             "• Limit ghee and butter to control saturated fat and phosphorus",
@@ -108,20 +108,46 @@ def generate_personalized_diet_plan(profile):
             "• Avoid pickles and papads (very high sodium)",
             "• Choose fresh homemade foods over processed Indian snacks"
         ],
-        "American": [
+        "american": [
             "• Limit fast food, pizza, and processed American foods (high sodium)",
             "• Choose fresh vegetables over canned versions (lower sodium)",
             "• Limit cheese and dairy products (high in phosphorus)",
             "• Watch portion sizes of meat and poultry",
             "• Choose fresh herbs over salt for seasoning"
         ],
-        "Generic": [
+        "mediterranean": [
+            "• Choose olive oil over other fats for heart health",
+            "• Include fish 2-3 times per week (omega-3 benefits)",
+            "• Limit cured meats and cheeses (high sodium and phosphorus)",
+            "• Enjoy fresh vegetables and fruits in moderation",
+            "• Choose whole grains in controlled portions"
+        ],
+        "asian": [
+            "• Limit soy sauce and high-sodium condiments",
+            "• Choose fresh vegetables over pickled varieties",
+            "• Control portion sizes of rice and noodles",
+            "• Be mindful of seaweed and sea vegetables (high iodine)",
+            "• Choose steamed or stir-fried over deep-fried foods"
+        ],
+        "generic": [
             "• Follow general kidney-friendly diet guidelines",
             "• Consult with a renal dietitian for personalized advice"
         ]
     }
     
-    culture_advice = culture_recommendations.get(profile.culture, culture_recommendations["Generic"])
+    # Get culture advice with robust matching and fallback
+    culture_key = (profile.culture.lower().strip() if profile.culture else "generic")
+    
+    # Handle both uppercase and lowercase generic
+    if culture_key == "generic":
+        culture_advice = culture_recommendations["generic"]
+    else:
+        culture_advice = culture_recommendations.get(culture_key, culture_recommendations["generic"])
+    
+    # Debug logging (can be removed in production)
+    print(f"Patient culture: '{profile.culture}' -> matched to: '{culture_key}'")
+    print(f"Culture advice count: {len(culture_advice)} recommendations")
+    print(f"First recommendation: {culture_advice[0] if culture_advice else 'None'}")
     
     # Literacy level adjustments
     if profile.literacy.lower() == "basic":

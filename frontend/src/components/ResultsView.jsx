@@ -1,315 +1,390 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { AlertCircle, FileText, Heart } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import { AlertTriangle, BookOpen, Download, HeartPulse, Pill, RotateCcw, ShieldCheck } from "lucide-react";
+
+const riskLabel = (risk) => {
+  if (risk === 0) return "Low";
+  if (risk === 1) return "Mild";
+  if (risk === 2) return "Moderate";
+  return "High";
+};
+
+const normalizeBullets = (text = "") => text.replaceAll("â€¢", "-").split("\n").filter(Boolean);
 
 const ResultsView = ({ results, onAnalyzeAnother }) => {
-  // Debug: Log results to see what we're getting
-  console.log('ResultsView received results:', results);
-  console.log('Drug results:', results?.AgentB?.drug_results);
-  
+  const agentAFeedback = results.AgentA?.feedback || [];
+  const drugResults = results.AgentB?.drug_results || [];
+  const handout = results.AgentC?.handout || "";
+  const fallbackHandout =
+    handout.includes("Error generating narrative") || handout.includes("404 models") || !handout;
+
+  const downloadReport = () => {
+    const pdfContent = `
+NEPHRONET KIDNEY DISEASE ANALYSIS REPORT
+========================================
+
+Date: ${new Date().toLocaleDateString()}
+Patient ID: ${results.patient_id || "N/A"}
+
+AGENT A: CKD RISK ASSESSMENT
+${agentAFeedback.join("\n\n")}
+
+AGENT B: DRUG RISK ANALYSIS
+${drugResults
+  .map(
+    (drug) => `Drug: ${drug.DrugName || "Unknown Drug"}
+Risk Level: ${drug.RiskLevel || "N/A"}
+Notes: ${drug.Notes || "No notes available"}
+${drug.AlternativeName && drug.AlternativeName !== "None" ? `Safer Alternative: ${drug.AlternativeName}` : ""}`
+  )
+  .join("\n\n")}
+
+AGENT C: PATIENT EDUCATION
+${fallbackHandout ? "Maintain regular follow-ups, review medications with a clinician, and follow personalized diet guidance." : handout}
+
+This AI-generated report is informational and does not replace medical advice.
+`;
+
+    const blob = new Blob([pdfContent], { type: "text/plain" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `NephroNet_Analysis_Report_${new Date().toISOString().split("T")[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
-    <section className="py-20 px-4 bg-gradient-to-b from-purple-50 to-white relative overflow-hidden">
-      {/* Background tech elements */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="h-full w-full" style={{
-          backgroundImage: `linear-gradient(rgba(147, 51, 234, 0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(147, 51, 234, 0.3) 1px, transparent 1px)`,
-          backgroundSize: '20px 20px',
-          animation: 'slide 20s linear infinite'
-        }}></div>
-      </div>
-
-      <div className="relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          viewport={{ once: true }}
-          className="text-center"
-        >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-purple-900 to-pink-900 bg-clip-text text-transparent"
-            style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-          >
-            Your Analysis Results
-          </h2>
-          <p className="text-xl text-gray-600 font-light" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-            Comprehensive insights from our specialized AI agents
+    <div className="section-wrap results-layout">
+      <div className="results-header">
+        <div>
+          <span className="eyebrow">
+            <ShieldCheck size={16} />
+            analysis complete
+          </span>
+          <h2 className="section-title">A concise readout from your clinical agents.</h2>
+          <p className="section-copy">
+            The report is organized by risk, medications, and patient education so each decision point has a clear place.
           </p>
-        </motion.div>
-
-        <div className="space-y-8 max-w-3xl mx-auto">
-          {/* Agent A - CKD Risk Assessment */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="group bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl duration-300 relative overflow-hidden"
-          >
-            {/* Neon glow effect on hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <AlertCircle className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold ml-3 bg-gradient-to-r from-purple-900 to-pink-900 bg-clip-text text-transparent" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                  CKD Risk Assessment
-                </h3>
-              </div>
-              <div className="space-y-6">
-                {results.AgentA?.feedback?.map((fb, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 relative group">
-                    {/* Enhanced neon glow effect on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    {fb.includes("Error generating narrative") || fb.includes("404 models") ? (
-                      <div>
-                        <p className="text-gray-700 leading-relaxed font-light mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                          Based on your lab results, your CKD risk assessment shows:
-                        </p>
-                        <div className="space-y-3">
-                          {results.AgentA?.risk?.map((risk, riskIdx) => (
-                            <div key={riskIdx} className="flex items-center space-x-3">
-                              <div className={`w-4 h-4 rounded-full ${
-                                risk === 0 ? 'bg-green-500' : 
-                                risk === 1 ? 'bg-yellow-500' : 
-                                risk === 2 ? 'bg-orange-500' : 'bg-red-500'
-                              }`}></div>
-                              <span className="text-lg text-gray-700 font-medium">
-                                Risk Level: {risk === 0 ? 'Low' : risk === 1 ? 'Mild' : risk === 2 ? 'Moderate' : 'High'}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                        <p className="text-gray-600 text-lg font-light mt-4">
-                          Continue regular monitoring and maintain a healthy lifestyle. Consult your healthcare provider for personalized advice.
-                        </p>
-                      </div>
-                    ) : (
-                      <div>
-                        {fb.includes("CKD Risk Assessment Results") ? (
-                          <div className="whitespace-pre-line text-gray-700 leading-relaxed font-light" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                            {fb}
-                          </div>
-                        ) : (
-                          <p className="text-gray-700 leading-relaxed font-light" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>{fb}</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Agent B - Drug Risks */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            viewport={{ once: true }}
-            className="group bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl duration-300 relative overflow-hidden"
-          >
-            {/* Neon glow effect on hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <FileText className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold ml-3 bg-gradient-to-r from-purple-900 to-pink-900 bg-clip-text text-transparent" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                  Drug Risk Analysis
-                </h3>
-              </div>
-              <div className="space-y-6">
-                {results.AgentB?.drug_results?.map((drug, idx) => (
-                  <div key={idx} className="p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 relative group">
-                    {/* Enhanced neon glow effect on hover */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <h4 className="text-xl font-bold text-purple-900 mb-2" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                          {drug.DrugName || 'Unknown Drug'}
-                        </h4>
-                        <p className="text-gray-600 text-lg font-light mt-2">
-                          {drug.Notes || 'No notes available'}
-                        </p>
-                      </div>
-                      <span className={`px-4 py-2 rounded-full text-sm font-semibold flex-shrink-0 ml-4 ${
-                        drug.RiskLevel === 'High' ? 'bg-red-100 text-red-800' :
-                        drug.RiskLevel === 'Moderate' ? 'bg-yellow-100 text-yellow-800' :
-                        drug.RiskLevel === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-green-100 text-green-800'
-                      }`}>
-                        {drug.RiskLevel === 'Medium' ? 'Moderate' : drug.RiskLevel} Risk
-                      </span>
-                    </div>
-                    {drug.AlternativeName && drug.AlternativeName !== "None" && (
-                      <div className="mt-4 pt-4 border-t border-purple-200">
-                        <p className="text-gray-600 text-lg font-light">
-                          <span className="font-medium">Safer Alternative:</span> {drug.AlternativeName}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Agent C - Patient Handout */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            viewport={{ once: true }}
-            className="group bg-white rounded-2xl shadow-xl p-8 hover:shadow-2xl duration-300 relative overflow-hidden"
-          >
-            {/* Neon glow effect on hover */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                  <Heart className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold ml-4 bg-gradient-to-r from-purple-900 to-pink-900 bg-clip-text text-transparent" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                  Patient Recommendations
-                </h3>
-              </div>
-              <div className="p-4 rounded-xl bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 relative group">
-                {/* Subtle lavender glow on hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-lavender-400/20 to-purple-300/30 opacity-0 group-hover:opacity-80 transition-opacity duration-300"></div>
-                {results.AgentC?.handout?.includes("Error generating narrative") || results.AgentC?.handout?.includes("404 models") ? (
-                  <div>
-                    <p className="text-gray-700 leading-relaxed font-light mb-4" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                      Personalized Patient Recommendations
-                    </p>
-                    <div className="space-y-4">
-                      <div className="flex items-start space-x-3">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <p className="text-gray-600 text-lg font-light">
-                          Maintain a balanced diet low in sodium and processed foods
-                        </p>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <p className="text-gray-600 text-lg font-light">
-                          Stay hydrated with adequate water intake
-                        </p>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <p className="text-gray-600 text-lg font-light">
-                          Regular exercise and maintain healthy weight
-                        </p>
-                      </div>
-                      <div className="flex items-start space-x-3">
-                        <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <p className="text-gray-600 text-lg font-light">
-                          Attend regular check-ups with your healthcare provider
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-gray-500 text-sm mt-6 font-light">
-                      Note: AI-generated recommendations are currently unavailable. Please consult your healthcare provider for personalized advice.
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    {results.AgentC?.handout?.includes("Personalized CKD Nutrition Plan") ? (
-                      <div className="text-gray-700 leading-relaxed font-light" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                        {results.AgentC.handout.split('\n').map((line, index) => {
-                          // Check if line starts with a bullet point
-                          if (line.trim().startsWith('•')) {
-                            return (
-                              <div key={index} className="flex items-start space-x-3 mb-3">
-                                <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                                <p className="text-gray-600 text-lg font-light">{line.trim().substring(1).trim()}</p>
-                              </div>
-                            );
-                          }
-                          // Check if line is a header (contains colons and is short, or contains specific keywords)
-                          else if ((line.includes(':') && line.length < 60) || 
-                                   line.includes('Lab Analysis Summary') ||
-                                   line.includes('Targeted Diet Plan') ||
-                                   line.includes('General Kidney Health') ||
-                                   line.includes('Cultural Dietary') ||
-                                   line.includes('Important Notes') ||
-                                   line.includes('Foods to Limit') ||
-                                   line.includes('Foods to Emphasize') ||
-                                   line.includes('Patient Profile') ||
-                                   line.includes('Simple Diet Plan') ||
-                                   line.includes('Personalized Nutrition')) {
-                            return (
-                              <h4 key={index} className="font-bold text-purple-900 mt-4 mb-3 text-lg">{line.trim()}</h4>
-                            );
-                          }
-                          // Regular text line
-                          else if (line.trim()) {
-                            return (
-                              <p key={index} className="text-gray-600 text-lg font-light mb-3">{line.trim()}</p>
-                            );
-                          }
-                          return null;
-                        })}
-                      </div>
-                    ) : (
-                      <div className="text-gray-700 leading-relaxed font-light" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                        {results.AgentC.handout.split('\n').map((line, index) => {
-                          // Check if line starts with a bullet point
-                          if (line.trim().startsWith('•')) {
-                            return (
-                              <div key={index} className="flex items-start space-x-3 mb-3">
-                                <div className="w-2 h-2 bg-purple-500 rounded-full mt-2 flex-shrink-0"></div>
-                                <p className="text-gray-600 text-lg font-light">{line.trim().substring(1).trim()}</p>
-                              </div>
-                            );
-                          }
-                          // Check if line is a header (contains colons and is short, or contains specific keywords)
-                          else if ((line.includes(':') && line.length < 60) || 
-                                   line.includes('Patient Education') ||
-                                   line.includes('Kidney Health') ||
-                                   line.includes('Important')) {
-                            return (
-                              <h4 key={index} className="font-bold text-purple-900 mt-4 mb-3 text-lg">{line.trim()}</h4>
-                            );
-                          }
-                          // Regular text line
-                          else if (line.trim()) {
-                            return (
-                              <p key={index} className="text-gray-600 text-lg font-light mb-3">{line.trim()}</p>
-                            );
-                          }
-                          return null;
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-          viewport={{ once: true }}
-          className="mt-12 text-center"
-        >
-          <button
-            onClick={onAnalyzeAnother}
-            className="px-8 py-4 rounded-full text-xl font-semibold text-white transition-all transform hover:scale-105 bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg hover:shadow-purple-500/50"
-            style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-          >
-            Analyze Another Report
-          </button>
-        </motion.div>
+        <button className="secondary-btn" onClick={downloadReport}>
+          <Download size={18} />
+          Download
+        </button>
       </div>
-    </section>
+
+      <div className="results-grid">
+        <motion.article
+          className="surface-card result-card result-card-wide"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+        >
+          <div className="result-heading">
+            <span className="card-icon">
+              <HeartPulse size={24} />
+            </span>
+            <div>
+              <h3>Agent A: The Sifter</h3>
+              <p>CKD risk assessment</p>
+            </div>
+          </div>
+
+          {agentAFeedback.some((fb) => fb.includes("Error generating narrative") || fb.includes("404 models")) ? (
+            <div className="risk-grid">
+              {(results.AgentA?.risk || []).map((risk, index) => (
+                <div className={`risk-tile risk-${risk}`} key={`${risk}-${index}`}>
+                  <span>{riskLabel(risk)}</span>
+                  <strong>Risk signal</strong>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="result-copy">
+              {agentAFeedback.map((fb, index) => (
+                <p key={index}>{fb}</p>
+              ))}
+            </div>
+          )}
+        </motion.article>
+
+        <motion.article
+          className="surface-card result-card"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.08 }}
+        >
+          <div className="result-heading">
+            <span className="card-icon">
+              <Pill size={24} />
+            </span>
+            <div>
+              <h3>Agent B: Pharmacist</h3>
+              <p>drug risk analysis</p>
+            </div>
+          </div>
+
+          <div className="drug-list">
+            {drugResults.length ? (
+              drugResults.map((drug, index) => (
+                <div className="drug-row" key={`${drug.DrugName}-${index}`}>
+                  <div>
+                    <strong>{drug.DrugName || "Unknown drug"}</strong>
+                    <p>{drug.Notes || "No notes available"}</p>
+                    {drug.AlternativeName && drug.AlternativeName !== "None" && (
+                      <span>Alternative: {drug.AlternativeName}</span>
+                    )}
+                  </div>
+                  <em className={`risk-badge ${String(drug.RiskLevel || "").toLowerCase()}`}>
+                    {drug.RiskLevel === "Medium" ? "Moderate" : drug.RiskLevel || "N/A"}
+                  </em>
+                </div>
+              ))
+            ) : (
+              <p className="empty-copy">No medication risks were returned for this report.</p>
+            )}
+          </div>
+        </motion.article>
+
+        <motion.article
+          className="surface-card result-card"
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.16 }}
+        >
+          <div className="result-heading">
+            <span className="card-icon">
+              <BookOpen size={24} />
+            </span>
+            <div>
+              <h3>Agent C: Educator</h3>
+              <p>patient recommendations</p>
+            </div>
+          </div>
+
+          <div className="education-list">
+            {(fallbackHandout
+              ? [
+                  "Maintain a balanced diet low in sodium and processed foods.",
+                  "Keep regular follow-ups with your healthcare provider.",
+                  "Review medications before starting new painkillers or supplements.",
+                  "Track blood pressure and kidney labs as advised.",
+                ]
+              : normalizeBullets(handout)
+            ).map((line, index) => (
+              <div key={`${line}-${index}`}>
+                <AlertTriangle size={16} />
+                <span>{line.replace(/^-/, "").trim()}</span>
+              </div>
+            ))}
+          </div>
+        </motion.article>
+      </div>
+
+      <div className="results-actions">
+        <button className="primary-btn" onClick={onAnalyzeAnother}>
+          <RotateCcw size={18} />
+          Analyze another report
+        </button>
+      </div>
+
+      <style>{`
+        .results-layout {
+          display: grid;
+          gap: 2rem;
+        }
+
+        .results-header {
+          display: flex;
+          align-items: end;
+          justify-content: space-between;
+          gap: 1.5rem;
+        }
+
+        .results-grid {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 1rem;
+        }
+
+        .result-card {
+          padding: 1.25rem;
+        }
+
+        .result-card-wide {
+          grid-column: 1 / -1;
+        }
+
+        .result-heading {
+          display: flex;
+          align-items: center;
+          gap: 0.9rem;
+          margin-bottom: 1rem;
+        }
+
+        .result-heading h3 {
+          margin: 0;
+          color: var(--ink);
+          font-size: 1.18rem;
+          font-weight: 900;
+        }
+
+        .result-heading p {
+          margin: 0.2rem 0 0;
+          color: var(--muted);
+          font-size: 0.84rem;
+          font-weight: 750;
+          text-transform: uppercase;
+        }
+
+        .result-copy {
+          display: grid;
+          gap: 0.8rem;
+          color: var(--muted);
+          line-height: 1.65;
+          white-space: pre-line;
+        }
+
+        .risk-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+          gap: 0.75rem;
+        }
+
+        .risk-tile {
+          padding: 1rem;
+          border-radius: 8px;
+          background: #fff;
+          border: 1px solid var(--line);
+        }
+
+        .risk-tile span,
+        .risk-tile strong {
+          display: block;
+        }
+
+        .risk-tile span {
+          color: var(--plum);
+          font-size: 1.3rem;
+          font-weight: 900;
+        }
+
+        .risk-tile strong {
+          margin-top: 0.3rem;
+          color: var(--muted);
+          font-size: 0.78rem;
+          text-transform: uppercase;
+        }
+
+        .drug-list,
+        .education-list {
+          display: grid;
+          gap: 0.75rem;
+        }
+
+        .drug-row {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 0.8rem;
+          padding: 0.9rem;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.62);
+        }
+
+        .drug-row strong {
+          color: var(--ink);
+        }
+
+        .drug-row p {
+          margin: 0.35rem 0;
+          color: var(--muted);
+          line-height: 1.55;
+        }
+
+        .drug-row span {
+          color: #287565;
+          font-size: 0.84rem;
+          font-weight: 800;
+        }
+
+        .risk-badge {
+          align-self: start;
+          padding: 0.4rem 0.62rem;
+          border-radius: 999px;
+          color: var(--plum);
+          background: var(--lilac);
+          font-size: 0.74rem;
+          font-style: normal;
+          font-weight: 900;
+          text-transform: uppercase;
+        }
+
+        .risk-badge.high {
+          color: #8f1d35;
+          background: #ffe0e7;
+        }
+
+        .risk-badge.moderate,
+        .risk-badge.medium {
+          color: #7d4c00;
+          background: #fff0c7;
+        }
+
+        .risk-badge.low {
+          color: #1f6b5d;
+          background: #dff8f2;
+        }
+
+        .education-list div {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.65rem;
+          padding: 0.85rem;
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          color: var(--muted);
+          background: rgba(255, 255, 255, 0.62);
+          line-height: 1.55;
+        }
+
+        .education-list svg {
+          flex: 0 0 auto;
+          margin-top: 0.2rem;
+          color: var(--plum);
+        }
+
+        .empty-copy {
+          margin: 0;
+          color: var(--muted);
+        }
+
+        .results-actions {
+          display: flex;
+          justify-content: center;
+        }
+
+        @media (max-width: 850px) {
+          .results-header,
+          .drug-row {
+            grid-template-columns: 1fr;
+          }
+
+          .results-header {
+            align-items: start;
+            flex-direction: column;
+          }
+
+          .results-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+    </div>
   );
 };
 

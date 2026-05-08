@@ -1,0 +1,94 @@
+DrugName,RiskLevel,AlternativeName,Notes
+Ibuprofen,High,Advil,Avoid in CKD stage 4–5; safer alternative is acetaminophen
+Gentamicin,High,Garamycin,High nephrotoxicity risk; monitor renal function closely
+Metformin,Moderate,Glucophage,Use with caution; contraindicated if eGFR <30
+Acetaminophen,Low,Paracetamol,Generally safe; monitor dose in liver disease
+Amphotericin B,High,Fungizone,Severe nephrotoxicity; use liposomal formulations if possible
+Cisplatin,High,Platinol,High risk; ensure hydration and monitor renal function
+Vancomycin,High,Vancocin,Monitor trough levels; adjust dose in CKD
+Naproxen,High,Aleve,Avoid in advanced CKD; consider acetaminophen
+Diclofenac,High,Voltaren,Avoid in CKD; safer alternative is acetaminophen
+Indomethacin,High,Indocin,Avoid in CKD; safer alternative is acetaminophen
+Ketorolac,High,Toradol,Short-term use only; avoid in CKD
+Amikacin,High,Amikin,High nephrotoxicity risk; monitor renal function
+Tobramycin,High,Nebcin,High nephrotoxicity risk; monitor renal function
+Piperacillin-Tazobactam,High,Zosyn,Monitor renal function; adjust dose in CKD
+Tenofovir,High,Viread,Associated with renal tubular toxicity; monitor renal function
+Acyclovir,Moderate,Zovirax,Adjust dose in CKD; monitor renal function
+Methotrexate,High,Trexall,High risk; contraindicated in severe CKD
+Cyclophosphamide,High,Cytoxan,Monitor renal function; adjust dose if impaired
+Hydrochlorothiazide,Moderate,HCTZ,Less effective in advanced CKD; monitor electrolytes
+Spironolactone,Moderate,Aldactone,Monitor potassium; risk of hyperkalemia in CKD
+Lisinopril,Moderate,Zestril,Monitor potassium and creatinine; risk of hyperkalemia
+Enalapril,Moderate,Vasotec,Monitor potassium and creatinine; risk of hyperkalemia
+Losartan,Moderate,Cozaar,Monitor potassium and creatinine; risk of hyperkalemia
+Omeprazole,Low,Prilosec,Generally safe; rare cases of interstitial nephritis
+Pantoprazole,Low,Protonix,Generally safe; rare cases of interstitial nephritis
+Atorvastatin,Moderate,Lipitor,Monitor liver and renal function; dose adjustment may be needed
+Simvastatin,Moderate,Zocor,Monitor liver and renal function; dose adjustment may be needed
+Lithium,High,Eskalith,High nephrotoxicity risk; monitor serum levels and renal function
+Allopurinol,Moderate,Zyloprim,Adjust dose in CKD; monitor for hypersensitivity
+Tacrolimus,High,Prograf,High nephrotoxicity risk; monitor drug levels and renal function
+Cyclosporine,High,Sandimmune,High nephrotoxicity risk; monitor drug levels and renal function
+NSAIDs,High,—,Avoid in CKD; safer alternative is acetaminophen
+ACE inhibitors,Moderate,—,Monitor potassium and creatinine; risk of hyperkalemia
+Diuretics,Moderate,—,Monitor electrolytes; adjust dose in CKD
+Furosemide,High,Lasix,Monitor electrolytes; risk of dehydration and renal impairment
+Erythromycin,Moderate,Erythrocin,Monitor renal function; adjust dose in CKD
+Clarithromycin,Moderate,Biaxin,Monitor renal function; adjust dose in CKD
+Azithromycin,Low,Zithromax,Generally safe; monitor renal function if prolonged use
+Amoxicillin,Low,Amoxil,Generally safe; adjust dose in CKD
+Ampicillin,Low,Omnipen,Generally safe; adjust dose in CKD
+Ceftriaxone,Moderate,Rocephin,Monitor renal function; adjust dose in CKD
+Cefepime,Moderate,Maxipime,Monitor renal function; adjust dose in CKD
+Meropenem,Moderate,Merrem,Monitor renal function; adjust dose in CKD
+Imipenem,Moderate,Primaxin,Monitor renal function; adjust dose in CKD
+Linezolid,Moderate,Zyvox,Monitor renal function; adjust dose in CKD
+Daptomycin,High,Cubicin,Monitor renal function; risk of myopathy
+Rifampin,Moderate,Rifadin,Monitor liver and renal function
+Isoniazid,Moderate,Nydrazid,Monitor liver and renal function
+Ethambutol,Moderate,Myambutol,Monitor renal function; adjust dose in CKD
+Pyrazinamide,Moderate,—,Monitor liver and renal function
+Levofloxacin,High,Levaquin,Adjust dose in CKD; monitor renal function
+Ciprofloxacin,High,Cipro,Adjust dose in CKD; monitor renal function
+Moxifloxacin,High,Avelox,Adjust dose in CKD; monitor renal function
+Nitrofurantoin,High,Macrobid,Avoid in CKD stage 3–5; contraindicated if eGFR <60
+Trimethoprim-Sulfamethoxazole,High,Bactrim,Monitor potassium and renal function; adjust dose in CKD
+Clindamycin,Moderate,Cleocin,Monitor renal function; adjust dose in CKD
+Chloramphenicol,High,—,High risk; avoid in CKD
+Tetracycline,Moderate,—,Adjust dose in CKD; monitor renal function
+Doxycycline,Moderate,Vibramycin,Adjust dose in CKD; monitor renal function
+Minocycline,Moderate,Minocin,Adjust dose in CKD; monitor renal function
+Streptomycin,High,—,High nephrotoxicity risk; monitor renal function
+Kanamycin,High,Kantrex,High nephrotoxicity risk; monitor renal function
+Neomycin,High,Neo-Fradin,High nephrotoxicity risk; avoid systemic use
+Polymyxin B,High,—,High nephrotoxicity risk; monitor renal function
+Colistin,High,—,High nephrotoxicity risk; monitor renal function
+Ganciclovir,High,Cytovene,Adjust dose in CKD; monitor renal function
+Valganciclovir,High,Valcyte,Adjust dose in CKD; monitor renal function
+Foscarnet,High,—,High nephrotoxicity risk; monitor renal function
+Cidofovir,High,—,High nephrotoxicity risk; monitor renal function
+Interferon-alpha,Moderate,—,Monitor renal function; adjust dose in CKD
+Ribavirin,Moderate,—,Adjust dose in CKD; monitor renal function
+Sofosbuvir,Low,Sovaldi,Generally safe; monitor renal function
+Ledipasvir,Low,Harvoni,Generally safe; monitor renal function
+Daclatasvir,Low,—,Generally safe; monitor renal function
+Abacavir,Moderate,—,Monitor renal function; adjust dose in CKD
+Lamivudine,Moderate,Epivir,Adjust dose in CKD; monitor renal function
+Zidovudine,Moderate,Retrovir,Adjust dose in CKD; monitor renal function
+Efavirenz,Moderate,Sustiva,Monitor renal function; adjust dose in CKD
+Nevirapine,Moderate,Viramune,Monitor renal function; adjust dose in CKD
+Raltegravir,Low,Isentress,Generally safe; monitor renal function
+Dolutegravir,Low,Tivicay,Generally safe; monitor renal function
+Bictegravir,Low,Biktarvy,Generally safe; monitor renal function
+Prednisone,Moderate,Deltasone,Monitor renal function; use lowest effective dose
+Methylprednisolone,Moderate,Medrol,Monitor renal function; use lowest effective dose
+Dexamethasone,Moderate,Decadron,Monitor renal function; use lowest effective dose
+Fludrocortisone,Moderate,Florinef,Monitor renal function; use lowest effective dose
+Insulin Glargine,Low,Lantus,Generally safe; adjust dose based on glucose control
+Insulin Lispro,Low,Humalog,Generally safe; adjust dose based on glucose control
+Insulin Aspart,Low,Novolog,Generally safe; adjust dose based on glucose control
+Insulin Detemir,Low,Levemir,Generally safe; adjust dose based on glucose control
+Insulin Regular,Low,Humulin R,Generally safe; adjust dose based on glucose control
+Insulin NPH,Low,Humulin N,Generally safe; adjust dose based on glucose control
+Sildenafil,Moderate,Viagra,Monitor renal function; adjust dose in CKD

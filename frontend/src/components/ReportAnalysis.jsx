@@ -1,136 +1,318 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Upload, FileText } from 'lucide-react';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { ArrowRight, FileText, Loader2, SlidersHorizontal, UploadCloud } from "lucide-react";
+
+const profileFields = [
+  {
+    id: "age",
+    label: "Age",
+    type: "number",
+    props: { min: 1, max: 120 },
+  },
+  {
+    id: "culture",
+    label: "Cultural context",
+    options: ["Indian", "American", "Mediterranean", "Asian", "Generic"],
+  },
+  {
+    id: "literacy",
+    label: "Health literacy",
+    options: ["basic", "moderate", "advanced"],
+  },
+];
 
 const ReportAnalysis = ({ onUpload, isUploading, file, setFile }) => {
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
+  const [patientProfile, setPatientProfile] = useState({
+    age: 45,
+    culture: "Indian",
+    literacy: "basic",
+  });
+  const [isDragging, setIsDragging] = useState(false);
+
+  const updateProfile = (field, value) => {
+    setPatientProfile((prev) => ({
+      ...prev,
+      [field]: field === "age" ? Number(value) || 45 : value,
+    }));
   };
 
-  const handleUploadClick = () => {
-    if (file && onUpload) {
-      onUpload();
+  const setPdfFile = (selectedFile) => {
+    if (!selectedFile) return;
+    if (selectedFile.type !== "application/pdf") {
+      alert("Please choose a PDF report.");
+      return;
     }
+    setFile(selectedFile);
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setIsDragging(false);
+    setPdfFile(event.dataTransfer.files?.[0]);
   };
 
   return (
-    <section className="py-20 px-4 relative overflow-hidden">
-      {/* Background with tech gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-purple-600 via-purple-700 to-pink-700">
-        {/* Tech grid pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="h-full w-full" style={{
-            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-            backgroundSize: '80px 80px'
-          }}></div>
-        </div>
-        
-        {/* Animated neon glow */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-purple-600/20 blur-3xl"
-          animate={{
-            background: [
-              'linear-gradient(45deg, rgba(147, 51, 234, 0.2) 0%, rgba(236, 72, 153, 0.2) 50%, rgba(147, 51, 234, 0.2) 100%)',
-              'linear-gradient(90deg, rgba(236, 72, 153, 0.2) 0%, rgba(147, 51, 234, 0.2) 50%, rgba(236, 72, 153, 0.2) 100%)',
-              'linear-gradient(135deg, rgba(147, 51, 234, 0.2) 0%, rgba(236, 72, 153, 0.2) 50%, rgba(147, 51, 234, 0.2) 100%)',
-            ]
-          }}
-          transition={{ duration: 4, repeat: Infinity, repeatType: "reverse" }}
-        />
-      </div>
-      
-      <div className="max-w-4xl mx-auto relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <h2 
-            className="text-4xl md:text-5xl font-bold mb-6 text-white"
-            style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-          >
-            Analyze Your Medical Report
-          </h2>
-          <p className="text-xl text-purple-100 font-light" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-            Upload your PDF report for comprehensive AI-powered analysis
-          </p>
-        </motion.div>
+    <div className="section-wrap report-layout">
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-120px" }}
+        transition={{ duration: 0.55 }}
+      >
+        <span className="eyebrow light">
+          <SlidersHorizontal size={16} />
+          report workflow
+        </span>
+        <h2 className="section-title light">Upload once. Let the agents do the clinical sorting.</h2>
+        <p className="section-copy light">
+          Add a PDF lab report, tune the patient context, and NephroNet routes the evidence through risk,
+          medication, and education checks.
+        </p>
 
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-12 border border-white/20"
-        >
-          <div className="border-4 border-dashed border-purple-300/50 rounded-2xl p-12 text-center hover:border-purple-400/70 transition-all duration-300 relative overflow-hidden group">
-            {/* Animated background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10">
-              <div className="w-20 h-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                <Upload className="h-10 w-10 text-white" />
-              </div>
-              
-              <h3 
-                className="text-2xl font-bold mb-4 text-white"
-                style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-              >
-                Upload Your Medical Report
-              </h3>
-              <p className="text-purple-100 mb-6 font-light" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
-                Drag and drop your PDF file here, or click to browse
-              </p>
-              
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={handleFileChange}
-                className="hidden"
-                id="file-upload"
-              />
-              <label
-                htmlFor="file-upload"
-                className="inline-block px-8 py-4 rounded-full font-semibold cursor-pointer transition-all transform hover:scale-105 bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-purple-500/50"
-                style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-              >
-                Choose PDF File
-              </label>
-              
-              {file && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-6 flex items-center justify-center space-x-2"
-                >
-                  <FileText className="h-5 w-5 text-green-400" />
-                  <span className="text-green-400 font-medium">{file.name}</span>
-                </motion.div>
-              )}
+        <div className="analysis-rail">
+          {["Extract labs", "Assess CKD risk", "Review medications", "Generate guidance"].map((step, index) => (
+            <div key={step}>
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{step}</strong>
             </div>
-          </div>
+          ))}
+        </div>
+      </motion.div>
 
+      <motion.div
+        className="glass-panel upload-panel"
+        initial={{ opacity: 0, scale: 0.96 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true, margin: "-120px" }}
+        transition={{ duration: 0.55, delay: 0.1 }}
+      >
+        <label
+          htmlFor="file-upload"
+          className={`drop-zone ${isDragging ? "is-dragging" : ""}`}
+          onDragOver={(event) => {
+            event.preventDefault();
+            setIsDragging(true);
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+        >
+          <input
+            id="file-upload"
+            type="file"
+            accept="application/pdf"
+            onChange={(event) => setPdfFile(event.target.files?.[0])}
+          />
+          <span className="upload-icon">
+            <UploadCloud size={34} />
+          </span>
+          <strong>{file ? "Report ready for analysis" : "Drop your PDF report here"}</strong>
+          <p>{file ? file.name : "or click to browse your files"}</p>
           {file && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-8 text-center"
-            >
-              <button
-                onClick={handleUploadClick}
-                disabled={isUploading}
-                className="px-12 py-4 rounded-full font-semibold text-white transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg hover:shadow-purple-500/50"
-                style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
-              >
-                {isUploading ? 'Analyzing...' : 'Analyze Report'}
-              </button>
-            </motion.div>
+            <span className="file-chip">
+              <FileText size={15} />
+              {(file.size / 1024).toFixed(1)} KB
+            </span>
           )}
-        </motion.div>
-      </div>
-    </section>
+        </label>
+
+        <div className="profile-grid">
+          {profileFields.map((field) => (
+            <label key={field.id} className="profile-field">
+              <span>{field.label}</span>
+              {field.options ? (
+                <select value={patientProfile[field.id]} onChange={(event) => updateProfile(field.id, event.target.value)}>
+                  {field.options.map((option) => (
+                    <option key={option} value={option}>
+                      {option[0].toUpperCase() + option.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type={field.type}
+                  value={patientProfile[field.id]}
+                  onChange={(event) => updateProfile(field.id, event.target.value)}
+                  {...field.props}
+                />
+              )}
+            </label>
+          ))}
+        </div>
+
+        <button className="primary-btn analyze-btn" onClick={() => onUpload?.(patientProfile)} disabled={!file || isUploading}>
+          {isUploading ? <Loader2 className="spin" size={19} /> : <ArrowRight size={19} />}
+          {isUploading ? "Analyzing report" : "Run multi-agent analysis"}
+        </button>
+      </motion.div>
+
+      <style>{`
+        .report-layout {
+          display: grid;
+          grid-template-columns: minmax(0, 0.9fr) minmax(22rem, 1fr);
+          gap: clamp(2rem, 5vw, 4rem);
+          align-items: center;
+        }
+
+        .analysis-rail {
+          display: grid;
+          gap: 0.7rem;
+          margin-top: 2rem;
+        }
+
+        .analysis-rail div {
+          display: flex;
+          align-items: center;
+          gap: 0.8rem;
+          padding: 0.85rem 1rem;
+          border: 1px solid rgba(255, 255, 255, 0.18);
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.1);
+        }
+
+        .analysis-rail span {
+          color: rgba(255, 255, 255, 0.54);
+          font-size: 0.78rem;
+          font-weight: 900;
+        }
+
+        .analysis-rail strong {
+          color: white;
+        }
+
+        .upload-panel {
+          padding: clamp(1rem, 3vw, 1.45rem);
+          border-radius: 8px;
+        }
+
+        .drop-zone {
+          position: relative;
+          display: grid;
+          place-items: center;
+          min-height: 18rem;
+          padding: 2rem;
+          border: 1px dashed rgba(255, 255, 255, 0.42);
+          border-radius: 8px;
+          color: white;
+          text-align: center;
+          background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06)),
+            radial-gradient(circle at top, rgba(204, 195, 235, 0.2), transparent 20rem);
+          overflow: hidden;
+          transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.is-dragging {
+          border-color: white;
+          transform: translateY(-2px);
+        }
+
+        .drop-zone input {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          cursor: pointer;
+        }
+
+        .upload-icon {
+          display: grid;
+          width: 4.8rem;
+          height: 4.8rem;
+          place-items: center;
+          margin-bottom: 1rem;
+          border-radius: 50%;
+          color: var(--plum);
+          background: white;
+          box-shadow: 0 24px 55px rgba(0, 0, 0, 0.18);
+        }
+
+        .drop-zone strong {
+          font-size: 1.3rem;
+        }
+
+        .drop-zone p {
+          margin: 0.45rem 0 0;
+          color: rgba(255, 255, 255, 0.7);
+        }
+
+        .file-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          margin-top: 0.9rem;
+          padding: 0.48rem 0.7rem;
+          border-radius: 999px;
+          color: var(--plum);
+          background: white;
+          font-size: 0.78rem;
+          font-weight: 850;
+        }
+
+        .profile-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 0.75rem;
+          margin-top: 0.9rem;
+        }
+
+        .profile-field {
+          display: grid;
+          gap: 0.42rem;
+        }
+
+        .profile-field span {
+          color: rgba(255, 255, 255, 0.72);
+          font-size: 0.75rem;
+          font-weight: 850;
+          letter-spacing: 0.05em;
+          text-transform: uppercase;
+        }
+
+        .profile-field input,
+        .profile-field select {
+          width: 100%;
+          height: 2.9rem;
+          border: 1px solid rgba(255, 255, 255, 0.22);
+          border-radius: 8px;
+          color: white;
+          background: rgba(255, 255, 255, 0.12);
+          padding: 0 0.8rem;
+          outline: none;
+        }
+
+        .profile-field option {
+          color: var(--ink);
+        }
+
+        .profile-field input:focus,
+        .profile-field select:focus {
+          border-color: white;
+          box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+        }
+
+        .analyze-btn {
+          width: 100%;
+          margin-top: 1rem;
+        }
+
+        .spin {
+          animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        @media (max-width: 900px) {
+          .report-layout,
+          .profile-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+    </div>
   );
 };
 

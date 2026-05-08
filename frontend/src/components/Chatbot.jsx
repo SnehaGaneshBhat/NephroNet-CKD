@@ -1,194 +1,244 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot } from 'lucide-react';
+import React, { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Bot, MessageCircle, Send, X } from "lucide-react";
+
+const responses = [
+  {
+    match: ["cause", "causes"],
+    text: "Common CKD causes include diabetes, high blood pressure, cardiovascular disease, autoimmune disease, family history, and long-term use of certain medications.",
+  },
+  {
+    match: ["symptom", "sign"],
+    text: "CKD can be silent early. Later signs may include fatigue, swelling in the feet or hands, urination changes, high blood pressure, nausea, and difficulty concentrating.",
+  },
+  {
+    match: ["prevent", "prevention", "precaution"],
+    text: "Prevention focuses on blood pressure control, diabetes management, healthy weight, less sodium, regular activity, avoiding smoking, and routine kidney function tests.",
+  },
+  {
+    match: ["diet", "food", "eat"],
+    text: "CKD diets are personalized. Many plans reduce sodium, limit processed foods, and adjust protein, potassium, phosphorus, and fluids based on lab results.",
+  },
+  {
+    match: ["test", "screening", "diagnosis"],
+    text: "Common screening includes creatinine and eGFR blood tests, urine albumin testing, blood pressure checks, and sometimes imaging such as ultrasound.",
+  },
+];
+
+const getBotResponse = (message) => {
+  const lower = message.toLowerCase();
+  const found = responses.find((item) => item.match.some((word) => lower.includes(word)));
+  return (
+    found?.text ||
+    "I can help with CKD causes, symptoms, prevention, diet, testing, stages, and treatment basics. For personal medical decisions, please consult a healthcare provider."
+  );
+};
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
-      type: 'bot',
-      text: 'Hello! I\'m your CKD assistant. I can help you with information about Chronic Kidney Disease, including causes, precautions, symptoms, and treatment options. How can I assist you today?'
-    }
+      type: "bot",
+      text: "Hi, I am your CKD assistant. Ask me about kidney disease basics, screening, diet, or prevention.",
+    },
   ]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isTyping]);
 
-  const generateBotResponse = (userMessage) => {
-    const message = userMessage.toLowerCase();
-    
-    // CKD-related responses
-    if (message.includes('cause') || message.includes('causes') || message.includes('what causes')) {
-      return "The main causes of Chronic Kidney Disease include:\n\n• Diabetes (most common cause)\n• High blood pressure\n• Heart disease\n• Family history of kidney disease\n• Autoimmune diseases like lupus\n• Prolonged use of certain medications\n• Age (risk increases after 60)\n• Obesity\n• Smoking\n\nRegular check-ups are important if you have these risk factors.";
-    }
-    
-    if (message.includes('symptom') || message.includes('signs')) {
-      return "Common symptoms of CKD include:\n\n• Fatigue and weakness\n• Swelling in hands/feet/ankles\n• Changes in urination (frequency, color, amount)\n• High blood pressure\n• Nausea and vomiting\n• Loss of appetite\n• Muscle cramps\n• Difficulty concentrating\n• Itchy skin\n\nEarly stages often have no symptoms, which is why screening is important.";
-    }
-    
-    if (message.includes('prevention') || message.includes('precaution') || message.includes('prevent')) {
-      return "To prevent or slow CKD progression:\n\n• Control blood sugar if diabetic\n• Manage blood pressure\n• Maintain healthy weight\n• Exercise regularly\n• Eat a balanced diet (low salt, low protein if advised)\n• Stay hydrated\n• Avoid smoking and limit alcohol\n• Regular kidney function tests\n• Take medications as prescribed\n• Avoid overuse of painkillers (NSAIDs)";
-    }
-    
-    if (message.includes('treatment') || message.includes('cure') || message.includes('manage')) {
-      return "CKD treatment focuses on:\n\n• Slowing disease progression\n• Managing complications\n• Improving quality of life\n\nTreatment options include:\n• Medications for blood pressure and diabetes\n• Dietary changes\n• Fluid restrictions\n• Dialysis (in advanced stages)\n• Kidney transplant (for end-stage renal disease)\n• Regular monitoring and follow-ups\n\nEarly detection and management are key to better outcomes.";
-    }
-    
-    if (message.includes('diet') || message.includes('food') || message.includes('eat')) {
-      return "For CKD patients, dietary recommendations include:\n\n• Limit sodium (salt) intake\n• Control protein intake (as advised by doctor)\n• Limit potassium and phosphorus if needed\n• Stay within fluid limits\n• Choose heart-healthy foods\n• Limit processed foods\n• Eat fresh fruits and vegetables (within limits)\n• Work with a renal dietitian for personalized meal plans";
-    }
-    
-    if (message.includes('test') || message.includes('screening') || message.includes('diagnosis')) {
-      return "CKD screening and diagnosis includes:\n\n• Blood tests (creatinine, eGFR)\n• Urine tests (protein, albumin)\n• Blood pressure monitoring\n• Imaging tests (ultrasound, CT scan)\n• Kidney biopsy in some cases\n\nRegular screening is recommended for:\n• People with diabetes or hypertension\n• Those over 60 years old\n• People with family history of kidney disease";
-    }
-    
-    if (message.includes('stage') || message.includes('progression')) {
-      return "CKD has 5 stages based on eGFR:\n\n• Stage 1: eGFR ≥90 (mild damage)\n• Stage 2: eGFR 60-89 (mild decrease)\n• Stage 3: eGFR 30-59 (moderate decrease)\n• Stage 4: eGFR 15-29 (severe decrease)\n• Stage 5: eGFR <15 (kidney failure)\n\nEarly detection and treatment can slow progression through stages.";
-    }
-    
-    // Default response
-    return "I can help you with information about:\n\n• CKD causes and risk factors\n• Symptoms and early warning signs\n• Prevention and lifestyle changes\n• Treatment options and management\n• Dietary recommendations\n• Screening and diagnosis\n• Disease stages and progression\n\nPlease ask me about any of these topics, or consult your healthcare provider for personalized medical advice.";
-  };
+  const sendMessage = () => {
+    const clean = inputMessage.trim();
+    if (!clean) return;
 
-  const handleSendMessage = async () => {
-    if (inputMessage.trim() === '') return;
-
-    const userMsg = { type: 'user', text: inputMessage };
-    setMessages(prev => [...prev, userMsg]);
-    setInputMessage('');
+    setMessages((prev) => [...prev, { type: "user", text: clean }]);
+    setInputMessage("");
     setIsTyping(true);
 
-    // Simulate bot thinking time
     setTimeout(() => {
-      const botResponse = generateBotResponse(inputMessage);
-      const botMsg = { type: 'bot', text: botResponse };
-      setMessages(prev => [...prev, botMsg]);
+      setMessages((prev) => [...prev, { type: "bot", text: getBotResponse(clean) }]);
       setIsTyping(false);
-    }, 1000);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
+    }, 650);
   };
 
   return (
     <>
-      {/* Chatbot Icon */}
-      <button
-        onClick={() => {
-          console.log('Chatbot icon clicked!');
-          setIsOpen(true);
-        }}
-        className="fixed bottom-6 right-6 w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 z-[9999] border-4 border-white"
-        style={{ 
-          backgroundColor: '#6B46C1',
-          position: 'fixed',
-          bottom: '24px',
-          right: '24px',
-          zIndex: 9999
-        }}
-      >
-        <MessageCircle className="h-8 w-8 text-white" />
+      <button className="chat-launcher" onClick={() => setIsOpen(true)} aria-label="Open CKD assistant">
+        <MessageCircle size={25} />
       </button>
 
-      {/* Chatbot Window */}
-      {isOpen && (
-        <div 
-          className="fixed bottom-24 right-6 w-56 h-[600px] bg-purple-100 rounded-2xl shadow-2xl flex flex-col z-[9999] border-2 border-purple-300"
-          style={{
-            position: 'fixed',
-            bottom: '100px',
-            right: '24px',
-            zIndex: 9999,
-            display: 'flex',
-            flexDirection: 'column',
-            backgroundColor: '#E6E6FA',
-            opacity: 1
-          }}
-        >
-          {/* Header */}
-          <div className="bg-purple-600 text-white p-3 rounded-t-2xl flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Bot className="h-4 w-4" />
-              <span className="font-semibold text-xs">CKD Assistant</span>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.aside
+            className="chat-panel"
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.96 }}
+            transition={{ duration: 0.22 }}
+          >
+            <header>
+              <div>
+                <Bot size={18} />
+                <span>CKD Assistant</span>
+              </div>
+              <button onClick={() => setIsOpen(false)} aria-label="Close CKD assistant">
+                <X size={17} />
+              </button>
+            </header>
+
+            <div className="chat-messages">
+              {messages.map((message, index) => (
+                <div key={`${message.text}-${index}`} className={`chat-message ${message.type}`}>
+                  {message.text}
+                </div>
+              ))}
+              {isTyping && <div className="chat-message bot typing">Thinking...</div>}
+              <div ref={messagesEndRef} />
             </div>
-            <button
-              onClick={() => {
-                console.log('Closing chatbot');
-                setIsOpen(false);
-              }}
-              className="text-white hover:bg-white/20 rounded-full p-1 transition-colors"
-            >
-              <X className="h-3 w-3" />
-            </button>
-          </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-2" style={{ flex: 1, overflowY: 'auto', backgroundColor: '#E6E6FA' }}>
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[90%] p-2 rounded-lg ${
-                    message.type === 'user'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-white text-gray-800 border border-purple-200'
-                  }`}
-                >
-                  <p className="text-xs whitespace-pre-line leading-tight">{message.text}</p>
-                </div>
-              </div>
-            ))}
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-white text-gray-800 p-2 rounded-lg border border-purple-200">
-                  <div className="flex space-x-1">
-                    <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce"></div>
-                    <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-1.5 h-1.5 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input */}
-          <div className="p-3 border-t border-purple-300" style={{ backgroundColor: '#E6E6FA' }}>
-            <div className="flex flex-col space-y-2">
+            <div className="chat-input">
               <input
-                type="text"
                 value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Ask about CKD..."
-                className="w-full px-2 py-1 border border-purple-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-xs bg-white"
-              />
-              <button
-                onClick={() => {
-                  console.log('Send button clicked');
-                  handleSendMessage();
+                onChange={(event) => setInputMessage(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") sendMessage();
                 }}
-                className="w-full bg-purple-600 text-white py-1 rounded-lg hover:bg-purple-700 transition-colors text-xs"
-              >
-                Send
+                placeholder="Ask about CKD..."
+              />
+              <button onClick={sendMessage} aria-label="Send message">
+                <Send size={17} />
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      <style>{`
+        .chat-launcher {
+          position: fixed;
+          right: 1.25rem;
+          bottom: 1.25rem;
+          z-index: 80;
+          display: grid;
+          width: 3.8rem;
+          height: 3.8rem;
+          place-items: center;
+          border: 1px solid rgba(255, 255, 255, 0.32);
+          border-radius: 50%;
+          color: white;
+          background: linear-gradient(135deg, var(--plum), var(--plum-2), var(--rose));
+          box-shadow: 0 20px 55px rgba(78, 59, 83, 0.32);
+        }
+
+        .chat-panel {
+          position: fixed;
+          right: 1.25rem;
+          bottom: 5.6rem;
+          z-index: 90;
+          display: grid;
+          grid-template-rows: auto 1fr auto;
+          width: min(23rem, calc(100vw - 2rem));
+          height: min(34rem, calc(100svh - 7rem));
+          overflow: hidden;
+          border: 1px solid rgba(78, 59, 83, 0.16);
+          border-radius: 8px;
+          background: rgba(251, 249, 255, 0.94);
+          box-shadow: 0 30px 90px rgba(33, 24, 41, 0.26);
+          backdrop-filter: blur(18px);
+        }
+
+        .chat-panel header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0.85rem;
+          color: white;
+          background: linear-gradient(135deg, var(--plum), var(--plum-2));
+        }
+
+        .chat-panel header div,
+        .chat-panel header button {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+        }
+
+        .chat-panel header span {
+          font-weight: 900;
+        }
+
+        .chat-panel header button,
+        .chat-input button {
+          border: 0;
+          color: inherit;
+          background: transparent;
+        }
+
+        .chat-messages {
+          display: flex;
+          flex-direction: column;
+          gap: 0.65rem;
+          overflow-y: auto;
+          padding: 0.85rem;
+        }
+
+        .chat-message {
+          max-width: 86%;
+          padding: 0.7rem 0.78rem;
+          border-radius: 8px;
+          font-size: 0.88rem;
+          line-height: 1.45;
+        }
+
+        .chat-message.bot {
+          align-self: flex-start;
+          color: var(--ink);
+          background: white;
+          border: 1px solid var(--line);
+        }
+
+        .chat-message.user {
+          align-self: flex-end;
+          color: white;
+          background: var(--plum);
+        }
+
+        .typing {
+          color: var(--muted) !important;
+        }
+
+        .chat-input {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 0.5rem;
+          padding: 0.75rem;
+          border-top: 1px solid var(--line);
+        }
+
+        .chat-input input {
+          min-width: 0;
+          border: 1px solid var(--line);
+          border-radius: 999px;
+          padding: 0.72rem 0.85rem;
+          outline: none;
+        }
+
+        .chat-input input:focus {
+          border-color: var(--plum);
+          box-shadow: 0 0 0 4px rgba(78, 59, 83, 0.08);
+        }
+
+        .chat-input button {
+          width: 2.75rem;
+          height: 2.75rem;
+          border-radius: 50%;
+          color: white;
+          background: var(--plum);
+        }
+      `}</style>
     </>
   );
 };
