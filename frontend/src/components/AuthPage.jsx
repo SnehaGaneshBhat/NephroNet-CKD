@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, LockKeyhole, Mail, Sparkles, UserPlus } from "lucide-react";
+import { ApiError, login, signup } from "../api";
 import ThreeWelcome from "./ThreeWelcome";
 
 const AuthPage = ({ initialMode = "login", onBack, onAuthenticated }) => {
@@ -10,6 +11,8 @@ const AuthPage = ({ initialMode = "login", onBack, onAuthenticated }) => {
     email: "",
     password: "",
   });
+  const [status, setStatus] = useState({ type: "", message: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     setMode(initialMode);
@@ -17,6 +20,7 @@ const AuthPage = ({ initialMode = "login", onBack, onAuthenticated }) => {
 
   const switchMode = (nextMode) => {
     setMode(nextMode);
+    setStatus({ type: "", message: "" });
     window.location.hash = nextMode;
   };
 
@@ -24,14 +28,45 @@ const AuthPage = ({ initialMode = "login", onBack, onAuthenticated }) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
-    const displayName = form.name || form.email?.split("@")[0] || "NephroNet User";
-    onAuthenticated?.({
-      name: displayName,
-      email: form.email || "student@nephronet.app",
-      plan: "Student preview",
-    });
+    setIsSubmitting(true);
+    setStatus({ type: "", message: "" });
+
+    try {
+      if (mode === "signup") {
+        await signup(form);
+        setStatus({ type: "success", message: "Account created successfully" });
+        return;
+      }
+
+      const data = await login({ email: form.email, password: form.password });
+      localStorage.setItem("nephronet_token", data.token);
+      setStatus({ type: "success", message: "Login successful" });
+
+      setTimeout(() => {
+        onAuthenticated?.({
+          name: data.user.name,
+          email: data.user.email,
+          plan: "Student preview",
+          token: data.token,
+        });
+      }, 700);
+    } catch (error) {
+      const message =
+        mode === "signup"
+          ? `Signup failed: ${error.message || "Please try again."}`
+          : error instanceof ApiError && error.status === 401
+            ? "Invalid email or password"
+            : error.message || "Login failed. Please try again.";
+
+      setStatus({
+        type: "error",
+        message,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -85,6 +120,12 @@ const AuthPage = ({ initialMode = "login", onBack, onAuthenticated }) => {
                   : "Set up a simple profile for the NephroNet preview."}
               </p>
 
+              {status.message && (
+                <div className={`auth-message ${status.type}`} role="alert">
+                  {status.message}
+                </div>
+              )}
+
               {mode === "signup" && (
                 <label>
                   <span>Name</span>
@@ -126,8 +167,8 @@ const AuthPage = ({ initialMode = "login", onBack, onAuthenticated }) => {
                 </div>
               </label>
 
-              <button className="primary-btn auth-submit" type="submit">
-                {mode === "login" ? "Login" : "Create account"}
+              <button className="primary-btn auth-submit" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Please wait..." : mode === "login" ? "Login" : "Create account"}
               </button>
             </form>
           </motion.div>
@@ -272,6 +313,25 @@ const AuthPage = ({ initialMode = "login", onBack, onAuthenticated }) => {
           color: var(--muted);
         }
 
+        .auth-message {
+          border-radius: 8px;
+          padding: 0.8rem 0.9rem;
+          font-weight: 800;
+          line-height: 1.45;
+        }
+
+        .auth-message.error {
+          border: 1px solid rgba(174, 52, 84, 0.24);
+          color: #8f2144;
+          background: #fff1f5;
+        }
+
+        .auth-message.success {
+          border: 1px solid rgba(44, 129, 92, 0.24);
+          color: #206f4c;
+          background: #effaf4;
+        }
+
         .auth-card label {
           display: grid;
           gap: 0.42rem;
@@ -311,6 +371,11 @@ const AuthPage = ({ initialMode = "login", onBack, onAuthenticated }) => {
         .auth-submit {
           width: 100%;
           margin-top: 0.35rem;
+        }
+
+        .auth-submit:disabled {
+          cursor: not-allowed;
+          opacity: 0.7;
         }
 
         @media (max-width: 760px) {
