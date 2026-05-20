@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, BookOpen, Download, HeartPulse, Pill, RotateCcw, ShieldCheck } from "lucide-react";
+import { AlertTriangle, BookOpen, CheckCircle2, Download, HeartPulse, Pill, RotateCcw, ShieldCheck, Utensils } from "lucide-react";
 
 const riskLabel = (risk) => {
   if (risk === 0) return "Low";
@@ -15,8 +15,14 @@ const ResultsView = ({ results, onAnalyzeAnother }) => {
   const agentAFeedback = results.AgentA?.feedback || [];
   const drugResults = results.AgentB?.drug_results || [];
   const handout = results.AgentC?.handout || "";
+  const foodPrescription = results.AgentC?.food_prescription || {};
+  const foodsToAvoid = foodPrescription.avoid || [];
+  const foodsToAdd = foodPrescription.add || [];
+  const lifestyleChanges = results.AgentC?.lifestyle_changes || [];
+  const personalizationNotes = results.AgentC?.personalization_notes || [];
   const fallbackHandout =
     handout.includes("Error generating narrative") || handout.includes("404 models") || !handout;
+  const hasStructuredAgentC = foodsToAvoid.length || foodsToAdd.length || lifestyleChanges.length;
 
   const downloadReport = () => {
     const pdfContent = `
@@ -40,7 +46,16 @@ ${drug.AlternativeName && drug.AlternativeName !== "None" ? `Safer Alternative: 
   .join("\n\n")}
 
 AGENT C: PATIENT EDUCATION
-${fallbackHandout ? "Maintain regular follow-ups, review medications with a clinician, and follow personalized diet guidance." : handout}
+${hasStructuredAgentC ? `
+Food Prescription - Avoid/Limit:
+${foodsToAvoid.map((item) => `- ${item}`).join("\n")}
+
+Food Prescription - Add/Prefer:
+${foodsToAdd.map((item) => `- ${item}`).join("\n")}
+
+Lifestyle Changes:
+${lifestyleChanges.map((item) => `- ${item}`).join("\n")}
+` : fallbackHandout ? "Maintain regular follow-ups, review medications with a clinician, and follow personalized diet guidance." : handout}
 
 This AI-generated report is informational and does not replace medical advice.
 `;
@@ -150,7 +165,7 @@ This AI-generated report is informational and does not replace medical advice.
         </motion.article>
 
         <motion.article
-          className="surface-card result-card"
+          className="surface-card result-card result-card-wide agent-c-card"
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -158,30 +173,90 @@ This AI-generated report is informational and does not replace medical advice.
         >
           <div className="result-heading">
             <span className="card-icon">
-              <BookOpen size={24} />
+              <Utensils size={24} />
             </span>
             <div>
               <h3>Agent C: Educator</h3>
-              <p>patient recommendations</p>
+              <p>food prescription and lifestyle plan</p>
             </div>
           </div>
 
-          <div className="education-list">
-            {(fallbackHandout
-              ? [
-                  "Maintain a balanced diet low in sodium and processed foods.",
-                  "Keep regular follow-ups with your healthcare provider.",
-                  "Review medications before starting new painkillers or supplements.",
-                  "Track blood pressure and kidney labs as advised.",
-                ]
-              : normalizeBullets(handout)
-            ).map((line, index) => (
-              <div key={`${line}-${index}`}>
-                <AlertTriangle size={16} />
-                <span>{line.replace(/^-/, "").trim()}</span>
+          {hasStructuredAgentC ? (
+            <div className="agent-c-prescription">
+              <div className="food-column avoid">
+                <h4>
+                  <AlertTriangle size={17} />
+                  Things to avoid or limit
+                </h4>
+                <div className="education-list">
+                  {foodsToAvoid.map((line, index) => (
+                    <div key={`avoid-${line}-${index}`}>
+                      <AlertTriangle size={16} />
+                      <span>{line}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+
+              <div className="food-column add">
+                <h4>
+                  <CheckCircle2 size={17} />
+                  Things to add to diet
+                </h4>
+                <div className="education-list">
+                  {foodsToAdd.map((line, index) => (
+                    <div key={`add-${line}-${index}`}>
+                      <CheckCircle2 size={16} />
+                      <span>{line}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="food-column lifestyle">
+                <h4>
+                  <BookOpen size={17} />
+                  Lifestyle changes
+                </h4>
+                <div className="education-list">
+                  {lifestyleChanges.map((line, index) => (
+                    <div key={`life-${line}-${index}`}>
+                      <BookOpen size={16} />
+                      <span>{line}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {personalizationNotes.length > 0 && (
+                <div className="personalization-strip">
+                  <strong>Personalized from this report</strong>
+                  <div>
+                    {personalizationNotes.map((note, index) => (
+                      <span key={`${note}-${index}`}>{note}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="education-list">
+              {(fallbackHandout
+                ? [
+                    "Maintain a balanced diet low in sodium and processed foods.",
+                    "Keep regular follow-ups with your healthcare provider.",
+                    "Review medications before starting new painkillers or supplements.",
+                    "Track blood pressure and kidney labs as advised.",
+                  ]
+                : normalizeBullets(handout)
+              ).map((line, index) => (
+                <div key={`${line}-${index}`}>
+                  <AlertTriangle size={16} />
+                  <span>{line.replace(/^-/, "").trim()}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </motion.article>
       </div>
 
@@ -196,6 +271,10 @@ This AI-generated report is informational and does not replace medical advice.
         .results-layout {
           display: grid;
           gap: 2rem;
+          width: 100vw;
+          margin-left: calc(50% - 50vw);
+          padding-left: 0;
+          padding-right: 0;
         }
 
         .results-header {
@@ -203,6 +282,14 @@ This AI-generated report is informational and does not replace medical advice.
           align-items: end;
           justify-content: space-between;
           gap: 1.5rem;
+        }
+
+        .results-header,
+        .results-grid,
+        .results-actions {
+          width: min(1180px, calc(100% - 2rem));
+          margin-left: auto;
+          margin-right: auto;
         }
 
         .results-grid {
@@ -230,14 +317,16 @@ This AI-generated report is informational and does not replace medical advice.
           margin: 0;
           color: var(--ink);
           font-size: 1.18rem;
-          font-weight: 900;
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
         }
 
         .result-heading p {
           margin: 0.2rem 0 0;
           color: var(--muted);
           font-size: 0.84rem;
-          font-weight: 750;
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
           text-transform: uppercase;
         }
 
@@ -284,6 +373,113 @@ This AI-generated report is informational and does not replace medical advice.
         .education-list {
           display: grid;
           gap: 0.75rem;
+        }
+
+        .agent-c-card {
+          min-height: 100svh;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          width: 100vw;
+          margin-left: calc(50% - 50vw);
+          border-left: 0;
+          border-right: 0;
+          border-radius: 0;
+          padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 4vw, 3rem);
+          background:
+            radial-gradient(circle at top right, rgba(120, 215, 198, 0.18), transparent 20rem),
+            rgba(255, 255, 255, 0.82);
+        }
+
+        .agent-c-card .result-heading,
+        .agent-c-card .agent-c-prescription {
+          width: min(1400px, calc(100% - 2rem));
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .agent-c-prescription {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: clamp(1rem, 2vw, 1.5rem);
+          flex: 1;
+          align-items: stretch;
+        }
+
+        .food-column {
+          border: 1px solid var(--line);
+          border-radius: 8px;
+          padding: clamp(1.1rem, 2vw, 1.6rem);
+          background: rgba(255, 255, 255, 0.64);
+          min-height: 26rem;
+        }
+
+        .food-column h4 {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin: 0 0 0.85rem;
+          color: var(--ink);
+          font-size: 1rem;
+          font-weight: 900;
+        }
+
+        .food-column .education-list {
+          gap: 0.9rem;
+        }
+
+        .food-column .education-list div {
+          min-height: 4.1rem;
+          padding: 1rem;
+          font-size: 1rem;
+        }
+
+        .food-column.avoid h4,
+        .food-column.avoid .education-list svg {
+          color: #8f1d35;
+        }
+
+        .food-column.add h4,
+        .food-column.add .education-list svg {
+          color: #1f6b5d;
+        }
+
+        .food-column.lifestyle h4,
+        .food-column.lifestyle .education-list svg {
+          color: var(--plum);
+        }
+
+        .personalization-strip {
+          grid-column: 1 / -1;
+          padding: 1rem;
+          border: 1px solid rgba(78, 59, 83, 0.12);
+          border-radius: 8px;
+          background: linear-gradient(135deg, rgba(204, 195, 235, 0.34), rgba(120, 215, 198, 0.14));
+        }
+
+        .personalization-strip strong {
+          display: block;
+          margin-bottom: 0.7rem;
+          color: var(--plum);
+          font-size: 0.84rem;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+        }
+
+        .personalization-strip div {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.55rem;
+        }
+
+        .personalization-strip span {
+          display: inline-flex;
+          padding: 0.48rem 0.62rem;
+          border-radius: 999px;
+          color: var(--plum);
+          background: rgba(255, 255, 255, 0.72);
+          font-size: 0.84rem;
+          font-weight: 750;
         }
 
         .drug-row {
@@ -380,6 +576,10 @@ This AI-generated report is informational and does not replace medical advice.
           }
 
           .results-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .agent-c-prescription {
             grid-template-columns: 1fr;
           }
         }

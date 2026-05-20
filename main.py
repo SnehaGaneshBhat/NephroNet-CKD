@@ -73,7 +73,14 @@ async def analyze_report(
     if not df.empty:
         lab_values = df.iloc[0].to_dict()
     
-    profile = PatientProfile(age=age, culture=culture, literacy=literacy, risk_level=risk_level, lab_values=lab_values)
+    profile = PatientProfile(
+        age=age,
+        culture=culture,
+        literacy=literacy,
+        risk_level=risk_level,
+        lab_values=lab_values,
+        prescriptions=prescriptions
+    )
     handout = generate_handout(profile)
 
     return {

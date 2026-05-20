@@ -1,7 +1,12 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
-from utils.ai_helper import call_ai_model
-import pandas as pd
+from pydantic import BaseModel, Field
+import json
+import os
+
+try:
+    import google.generativeai as genai
+except ImportError:  # Keeps the API usable even before dependencies are installed.
+    genai = None
 
 router = APIRouter(prefix="/agent-c", tags=["Agent C"])
 
@@ -10,15 +15,182 @@ class PatientProfile(BaseModel):
     culture: str
     literacy: str
     risk_level: int = 0
-    lab_values: dict = {}
+    lab_values: dict = Field(default_factory=dict)
+    prescriptions: list[str] = Field(default_factory=list)
 
 def generate_handout(profile: PatientProfile):
-    # Always use personalized function for better results
-    narrative = generate_personalized_diet_plan(profile)
-    
-    return {"handout": narrative}
+    plan = generate_gemini_lifestyle_plan(profile)
+    return plan
 
-def generate_personalized_diet_plan(profile):
+def strip_json_fence(text: str) -> str:
+    cleaned = text.strip()
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[7:]
+    elif cleaned.startswith("```"):
+        cleaned = cleaned[3:]
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3]
+    return cleaned.strip()
+
+def normalize_plan(plan: dict, fallback_text: str = "") -> dict:
+    food = plan.get("food_prescription") or {}
+    avoid = food.get("avoid") or []
+    add = food.get("add") or []
+    lifestyle = plan.get("lifestyle_changes") or []
+    notes = plan.get("personalization_notes") or []
+    safety_note = plan.get("safety_note") or "This is educational guidance. Please confirm diet and lifestyle changes with a healthcare professional."
+
+    handout_parts = [
+        "Food Prescription",
+        "Things to avoid:",
+        *[f"- {item}" for item in avoid],
+        "",
+        "Things to add to your diet:",
+        *[f"- {item}" for item in add],
+        "",
+        "Lifestyle changes:",
+        *[f"- {item}" for item in lifestyle],
+        "",
+        "Why this is personalized:",
+        *[f"- {item}" for item in notes],
+        "",
+        safety_note,
+    ]
+
+    return {
+        "handout": "\n".join(part for part in handout_parts if part is not None).strip() or fallback_text,
+        "food_prescription": {
+            "avoid": avoid,
+            "add": add,
+        },
+        "lifestyle_changes": lifestyle,
+        "personalization_notes": notes,
+        "safety_note": safety_note,
+    }
+
+def generate_gemini_lifestyle_plan(profile: PatientProfile):
+    """Generate personalized lifestyle guidance with Gemini, with a safe local fallback."""
+
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key or genai is None:
+        return generate_rule_based_diet_plan(profile)
+
+    try:
+        genai.configure(api_key=api_key)
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        model = genai.GenerativeModel(model_name)
+
+        payload = {
+            "age": profile.age,
+            "ethnicity_or_cultural_background": profile.culture,
+            "health_literacy_level": profile.literacy,
+            "ckd_risk_level": profile.risk_level,
+            "parsed_lab_values": profile.lab_values,
+            "parsed_prescriptions": profile.prescriptions,
+        }
+
+        prompt = f"""
+You are Agent C in NephroNet, a patient-education assistant for chronic kidney disease report analysis.
+
+Create personalized lifestyle and food recommendations using the patient context and parsed report data below.
+
+Patient/report data:
+{json.dumps(payload, indent=2, default=str)}
+
+Return ONLY valid JSON in this exact shape:
+{{
+  "food_prescription": {{
+    "avoid": ["4 to 7 short, specific food/drink items to avoid or limit"],
+    "add": ["4 to 7 short, specific food/drink items to add or prefer"]
+  }},
+  "lifestyle_changes": ["4 to 7 short, practical lifestyle changes"],
+  "personalization_notes": ["2 to 5 short notes naming the lab/profile signals that influenced the advice"],
+  "safety_note": "One short medical safety note"
+}}
+
+Rules:
+- Personalize from parsed_lab_values, age, ethnicity_or_cultural_background, health_literacy_level, ckd_risk_level, and parsed_prescriptions.
+- Food options must fit the patient's cultural background where possible.
+- Keep language appropriate for the literacy level.
+- Do not diagnose. Do not claim certainty beyond the supplied data.
+- Do not recommend medicine changes. If medication is relevant, say to review it with a clinician.
+- Be concise. Each list item should be one sentence or less.
+"""
+
+        response = model.generate_content(prompt)
+        text = getattr(response, "text", "").strip()
+        if not text:
+            return generate_rule_based_structured_plan(profile)
+        parsed = json.loads(strip_json_fence(text))
+        return normalize_plan(parsed, fallback_text=text)
+    except Exception as exc:
+        print(f"Gemini Agent C fallback triggered: {exc}")
+        return generate_rule_based_structured_plan(profile)
+
+def generate_rule_based_structured_plan(profile):
+    lab_values = profile.lab_values or {}
+    culture_key = (profile.culture.lower().strip() if profile.culture else "generic")
+    basic = profile.literacy.lower().strip() == "basic"
+
+    avoid = ["Packaged and canned foods high in sodium", "Sugary drinks and sweets", "Large portions of red or processed meat"]
+    add = ["Fresh home-cooked meals with less salt", "Controlled portions of lean protein", "Fresh vegetables in kidney-safe portions"]
+    lifestyle = ["Track blood pressure and repeat kidney labs as advised", "Walk or do light activity most days if your clinician allows", "Sleep 7 to 8 hours and keep regular meal timing"]
+    notes = []
+
+    if lab_values.get("sc") is not None and lab_values.get("sc", 0) > 1.5:
+        notes.append(f"Creatinine is elevated at {lab_values['sc']} mg/dL, so protein portions should be controlled.")
+        avoid.extend(["Very large protein portions", "Frequent dairy, nuts, seeds, and beans without renal diet guidance"])
+        add.append("Smaller measured portions of eggs, fish, or poultry")
+
+    if lab_values.get("bgr") is not None and lab_values.get("bgr", 0) > 110:
+        notes.append(f"Blood glucose is elevated at {lab_values['bgr']} mg/dL, so carbohydrate quality matters.")
+        avoid.extend(["White rice or refined flour in large portions", "Sweet tea, juice, desserts, and added sugar"])
+        add.extend(["Low-glycemic vegetables", "Smaller portions of rice or roti paired with vegetables"])
+
+    if lab_values.get("bp") is not None and lab_values.get("bp", 0) > 140:
+        notes.append(f"Blood pressure is high at {lab_values['bp']} mmHg, so sodium should be reduced.")
+        avoid.extend(["Pickles, papad, salty snacks, sauces, and restaurant food"])
+        lifestyle.append("Use herbs, lemon, garlic, and spices instead of extra salt.")
+
+    if lab_values.get("hemo") is not None and lab_values.get("hemo", 0) < 12:
+        notes.append(f"Hemoglobin is low at {lab_values['hemo']} g/dL, so iron intake should be discussed.")
+        add.extend(["Iron-rich foods such as greens or fortified foods, based on clinician advice", "Vitamin C foods with meals to support iron absorption"])
+
+    if culture_key == "indian":
+        avoid.extend(["Pickles, papad, namkeen, and salty chutneys", "Large dal or legume portions if potassium/phosphorus is a concern"])
+        add.extend(["Low-salt homemade sabzi", "Measured portions of rice or roti with vegetables"])
+    elif culture_key == "asian":
+        avoid.extend(["Soy sauce, instant noodles, pickled foods, and salty condiments"])
+        add.extend(["Steamed or stir-fried fresh vegetables with minimal sauce"])
+    elif culture_key == "mediterranean":
+        avoid.extend(["Cured meats, salty cheeses, and preserved foods"])
+        add.extend(["Olive oil, fresh herbs, and controlled portions of fish"])
+    elif culture_key == "american":
+        avoid.extend(["Fast food, pizza, deli meats, chips, and canned soups"])
+        add.extend(["Fresh salads with low-sodium dressing", "Grilled lean proteins in smaller portions"])
+
+    if basic:
+        lifestyle = [
+            "Eat less salt and sugar.",
+            "Choose fresh home-cooked food more often.",
+            "Walk daily if your doctor says it is safe.",
+            "Ask your doctor before changing medicines or diet.",
+        ]
+
+    if not notes:
+        notes.append("The advice is based on the uploaded report values and profile details provided.")
+
+    return normalize_plan({
+        "food_prescription": {
+            "avoid": list(dict.fromkeys(avoid))[:7],
+            "add": list(dict.fromkeys(add))[:7],
+        },
+        "lifestyle_changes": list(dict.fromkeys(lifestyle))[:7],
+        "personalization_notes": notes[:5],
+        "safety_note": "This is educational guidance. Please confirm diet, fluid, and medication decisions with your healthcare professional.",
+    })
+
+def generate_rule_based_diet_plan(profile):
     """Generate personalized diet recommendations based on patient profile and specific lab values"""
     
     lab_values = profile.lab_values or {}
