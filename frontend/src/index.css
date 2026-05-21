@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Times+New+Roman:wght@400;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -32,7 +32,7 @@ body {
   background:
     radial-gradient(circle at top left, rgba(204, 195, 235, 0.62), transparent 28rem),
     linear-gradient(180deg, #fff 0%, #f6f2ff 48%, #fff 100%);
-  font-family: "Inter", system-ui, sans-serif;
+  font-family: "Times New Roman", serif;
 }
 
 button,
@@ -145,7 +145,8 @@ button {
   color: var(--plum);
   background: transparent;
   font-size: 0.86rem;
-  font-weight: 800;
+  font-family: "Times New Roman", serif;
+  font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -188,6 +189,7 @@ button {
   color: rgba(33, 24, 41, 0.74);
   background: transparent;
   font-size: 0.9rem;
+  font-family: "Times New Roman", serif;
   font-weight: 700;
   transition: transform 180ms ease, color 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
@@ -210,7 +212,8 @@ button {
   color: var(--plum);
   background: rgba(204, 195, 235, 0.32);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-family: "Times New Roman", serif;
+  font-weight: 700;
   letter-spacing: 0.02em;
 }
 
@@ -252,7 +255,8 @@ button {
   margin: 0;
   color: var(--ink);
   font-size: clamp(2.2rem, 4vw, 4.8rem);
-  font-weight: 900;
+  font-family: "Times New Roman", serif;
+  font-weight: 700;
   letter-spacing: 0;
   line-height: 0.96;
 }
@@ -266,6 +270,7 @@ button {
   margin: 1.15rem 0 0;
   color: var(--muted);
   font-size: clamp(1rem, 1.6vw, 1.18rem);
+  font-family: "Times New Roman", serif;
   line-height: 1.75;
 }
 
@@ -296,7 +301,8 @@ button {
   justify-content: center;
   gap: 0.55rem;
   border-radius: 999px;
-  font-weight: 800;
+  font-family: "Times New Roman", serif;
+  font-weight: 700;
   transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
@@ -342,7 +348,8 @@ button {
   box-shadow: 0 16px 38px rgba(78, 59, 83, 0.12);
   backdrop-filter: blur(16px);
   font-size: 0.76rem;
-  font-weight: 800;
+  font-family: "Times New Roman", serif;
+  font-weight: 700;
 }
 
 @keyframes slow-float {

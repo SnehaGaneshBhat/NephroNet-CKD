@@ -265,7 +265,8 @@ const HeroCarousel = ({ scrollToSection, onAccountClick }) => {
           max-width: 850px;
           color: white;
           font-size: clamp(3.5rem, 8vw, 7.8rem);
-          font-weight: 900;
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
           letter-spacing: 0;
           line-height: 0.88;
         }
@@ -275,6 +276,7 @@ const HeroCarousel = ({ scrollToSection, onAccountClick }) => {
           margin: 1.3rem 0 0;
           color: rgba(255, 255, 255, 0.78);
           font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+          font-family: "Times New Roman", serif;
           line-height: 1.7;
         }
 
@@ -313,7 +315,8 @@ const HeroCarousel = ({ scrollToSection, onAccountClick }) => {
         .console-title {
           color: rgba(255, 255, 255, 0.72);
           font-size: 0.75rem;
-          font-weight: 900;
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
           letter-spacing: 0.1em;
           text-transform: uppercase;
         }
@@ -339,6 +342,7 @@ const HeroCarousel = ({ scrollToSection, onAccountClick }) => {
 
         .console-grid strong {
           font-size: 1.5rem;
+          font-family: "Times New Roman", serif;
           line-height: 1;
         }
 
@@ -346,6 +350,7 @@ const HeroCarousel = ({ scrollToSection, onAccountClick }) => {
           margin-top: 0.35rem;
           color: rgba(255, 255, 255, 0.64);
           font-size: 0.72rem;
+          font-family: "Times New Roman", serif;
         }
 
         .signal-stack {

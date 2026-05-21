@@ -190,6 +190,7 @@ const Chatbot = () => {
           padding: 0.7rem 0.78rem;
           border-radius: 8px;
           font-size: 0.88rem;
+          font-family: "Times New Roman", serif;
           line-height: 1.45;
         }
 

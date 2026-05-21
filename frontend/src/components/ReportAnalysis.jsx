@@ -263,7 +263,8 @@ const ReportAnalysis = ({ onUpload, isUploading, file, setFile }) => {
         .profile-field span {
           color: rgba(255, 255, 255, 0.72);
           font-size: 0.75rem;
-          font-weight: 850;
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
           letter-spacing: 0.05em;
           text-transform: uppercase;
         }

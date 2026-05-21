@@ -53,6 +53,7 @@ async def analyze_report(
 
     # --- Agent A: Parse labs and score CKD risk ---
     df, prescriptions = parse_pdf(pdf_path)
+    df["age"] = age
     temp_csv = os.path.join(os.getcwd(), "temp_labs.csv")
     df.to_csv(temp_csv, index=False)
     results_a = agent_a(temp_csv)

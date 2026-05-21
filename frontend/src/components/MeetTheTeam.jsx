@@ -127,7 +127,8 @@ const MeetTheTeam = () => {
           margin: 1.1rem 0 0.35rem;
           color: var(--ink);
           font-size: 1.35rem;
-          font-weight: 900;
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
         }
 
         .team-card strong,
@@ -141,18 +142,22 @@ const MeetTheTeam = () => {
         .team-card strong {
           color: var(--plum);
           font-size: 0.92rem;
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
         }
 
         .team-card span {
           margin-top: 0.35rem;
           color: #287565;
           font-size: 0.82rem;
-          font-weight: 850;
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
         }
 
         .team-card p {
           margin: 1.2rem 0 0;
           color: var(--muted);
+          font-family: "Times New Roman", serif;
           line-height: 1.7;
         }
 

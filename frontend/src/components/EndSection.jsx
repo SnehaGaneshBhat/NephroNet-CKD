@@ -97,7 +97,8 @@ const EndSection = () => {
           align-items: center;
           gap: 0.75rem;
           font-size: clamp(1.8rem, 4vw, 3rem);
-          font-weight: 900;
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
           letter-spacing: 0;
           text-transform: none;
         }
@@ -106,6 +107,7 @@ const EndSection = () => {
           max-width: 440px;
           margin: 0;
           color: rgba(255, 255, 255, 0.72);
+          font-family: "Times New Roman", serif;
           line-height: 1.65;
         }
 
@@ -133,7 +135,8 @@ const EndSection = () => {
         .footer-card h3 {
           margin: 0 0 1rem;
           font-size: 1rem;
-          font-weight: 900;
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
         }
 
         .footer-card p {
@@ -176,6 +179,7 @@ const EndSection = () => {
           gap: 1rem;
           color: rgba(255, 255, 255, 0.58);
           font-size: 0.86rem;
+          font-family: "Times New Roman", serif;
         }
 
         .footer-bottom div {

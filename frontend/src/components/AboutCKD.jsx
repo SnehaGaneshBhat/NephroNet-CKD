@@ -156,12 +156,14 @@ const AboutCKD = () => {
           margin: 0 0 0.65rem;
           color: var(--ink);
           font-size: 1.1rem;
-          font-weight: 850;
+          font-family: "Times New Roman", serif;
+          font-weight: 700;
         }
 
         .ckd-card p {
           margin: 0;
           color: var(--muted);
+          font-family: "Times New Roman", serif;
           line-height: 1.65;
         }
 
