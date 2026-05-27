@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bot, MessageCircle, Send, X } from "lucide-react";
+import { askChatbot } from "../api";
 
 const responses = [
   {
@@ -16,8 +17,12 @@ const responses = [
     text: "Prevention focuses on blood pressure control, diabetes management, healthy weight, less sodium, regular activity, avoiding smoking, and routine kidney function tests.",
   },
   {
-    match: ["diet", "food", "eat"],
+    match: ["diet", "food", "eat", "carbohydrate", "carbohydrates", "carbs", "sugar", "starch"],
     text: "CKD diets are personalized. Many plans reduce sodium, limit processed foods, and adjust protein, potassium, phosphorus, and fluids based on lab results.",
+  },
+  {
+    match: ["diabetes", "diabetic", "blood sugar", "glucose", "hba1c", "a1c"],
+    text: "Diabetes management for kidney health usually means keeping blood sugar in your target range, checking HbA1c as advised, choosing high-fiber slower carbohydrates, limiting sugary drinks, staying active, taking prescribed medicines consistently, and monitoring kidney tests such as eGFR and urine albumin.",
   },
   {
     match: ["test", "screening", "diagnosis"],
@@ -34,12 +39,12 @@ const getBotResponse = (message) => {
   );
 };
 
-const Chatbot = () => {
+const Chatbot = ({ reportContext = null }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       type: "bot",
-      text: "Hi, I am your CKD assistant. Ask me about kidney disease basics, screening, diet, or prevention.",
+      text: "Hi, I am your CKD assistant. Ask me about kidney disease basics, screening, diet, prevention, or your latest analyzed report.",
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
@@ -50,18 +55,24 @@ const Chatbot = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     const clean = inputMessage.trim();
-    if (!clean) return;
+    if (!clean || isTyping) return;
 
     setMessages((prev) => [...prev, { type: "user", text: clean }]);
     setInputMessage("");
     setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const data = await askChatbot(clean, reportContext);
+      console.debug("NephroNet chatbot response source:", data.response_source, data);
+      setMessages((prev) => [...prev, { type: "bot", text: data.answer || getBotResponse(clean) }]);
+    } catch (error) {
+      console.error("Chatbot error:", error);
       setMessages((prev) => [...prev, { type: "bot", text: getBotResponse(clean) }]);
+    } finally {
       setIsTyping(false);
-    }, 650);
+    }
   };
 
   return (
@@ -108,7 +119,7 @@ const Chatbot = () => {
                 }}
                 placeholder="Ask about CKD..."
               />
-              <button onClick={sendMessage} aria-label="Send message">
+              <button onClick={sendMessage} aria-label="Send message" disabled={isTyping}>
                 <Send size={17} />
               </button>
             </div>
@@ -238,6 +249,11 @@ const Chatbot = () => {
           border-radius: 50%;
           color: white;
           background: var(--plum);
+        }
+
+        .chat-input button:disabled {
+          cursor: wait;
+          opacity: 0.55;
         }
       `}</style>
     </>

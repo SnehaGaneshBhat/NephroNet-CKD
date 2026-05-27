@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import axios from "axios";
 import { Activity, Brain, MessageSquare, ShieldCheck, Sparkles, UserCircle, Users } from "lucide-react";
 import HeroCarousel from "./components/HeroCarousel";
 import AboutCKD from "./components/AboutCKD";
@@ -10,6 +9,7 @@ import EndSection from "./components/EndSection";
 import Chatbot from "./components/Chatbot";
 import AuthPage from "./components/AuthPage";
 import AccountPage from "./components/AccountPage";
+import { analyzeReport, getAccountSummary, getCurrentUser, getReportHistory } from "./api";
 
 const navItems = [
   { id: "about", label: "About", icon: Brain },
@@ -33,6 +33,9 @@ function App() {
 
   const [activeView, setActiveView] = useState(getViewFromHash);
   const [accountUser, setAccountUser] = useState(null);
+  const [accountSummary, setAccountSummary] = useState(null);
+  const [reportHistory, setReportHistory] = useState([]);
+  const [isAccountLoading, setIsAccountLoading] = useState(false);
 
   const homeRef = useRef(null);
   const aboutRef = useRef(null);
@@ -79,6 +82,40 @@ function App() {
     return () => observer.disconnect();
   }, []);
 
+  const loadAccountData = async () => {
+    const token = localStorage.getItem("nephronet_token");
+    if (!token) return;
+
+    setIsAccountLoading(true);
+    try {
+      const [summary, history] = await Promise.all([getAccountSummary(), getReportHistory()]);
+      setAccountSummary(summary);
+      setReportHistory(history.reports || []);
+    } catch (error) {
+      console.error("Account data error:", error);
+      if (error?.status === 401) {
+        localStorage.removeItem("nephronet_token");
+        setAccountUser(null);
+      }
+    } finally {
+      setIsAccountLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("nephronet_token");
+    if (!token) return;
+
+    getCurrentUser()
+      .then((user) => {
+        setAccountUser({ ...user, plan: "Student preview", token });
+        loadAccountData();
+      })
+      .catch(() => {
+        localStorage.removeItem("nephronet_token");
+      });
+  }, []);
+
   useEffect(() => {
     const handleHashChange = () => setActiveView(getViewFromHash());
     window.addEventListener("hashchange", handleHashChange);
@@ -109,18 +146,11 @@ function App() {
     }
 
     setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("age", patientProfile.age);
-    formData.append("culture", patientProfile.culture);
-    formData.append("literacy", patientProfile.literacy);
-
     try {
-      const res = await axios.post("http://127.0.0.1:8000/analyze-report", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      setResults(res.data);
+      const data = await analyzeReport(file, patientProfile);
+      setResults(data);
       setShowResults(true);
+      await loadAccountData();
       setTimeout(() => scrollToSection("results"), 120);
     } catch (err) {
       console.error("Upload error:", err);
@@ -149,6 +179,7 @@ function App() {
         onBack={() => navigateView("app")}
         onAuthenticated={(user) => {
           setAccountUser(user);
+          loadAccountData();
           navigateView("account");
         }}
       />
@@ -159,9 +190,15 @@ function App() {
     return (
       <AccountPage
         user={accountUser}
+        summary={accountSummary}
+        reports={reportHistory}
+        isLoading={isAccountLoading}
         onBack={() => navigateView("app")}
         onLogout={() => {
+          localStorage.removeItem("nephronet_token");
           setAccountUser(null);
+          setAccountSummary(null);
+          setReportHistory([]);
           navigateView("auth");
         }}
       />
@@ -237,7 +274,7 @@ function App() {
         <span>multi-agent CKD intelligence</span>
       </div>
 
-      <Chatbot />
+      <Chatbot reportContext={results} />
     </div>
   );
 }
